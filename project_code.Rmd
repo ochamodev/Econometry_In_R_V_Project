@@ -1,0 +1,66 @@
+---
+title: "Predict House Prices - Econometric en R - 2024"
+output: html_notebook
+---
+
+# 0. Environment setup
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(caret)
+library(MASS)
+```
+
+
+# 1. Constants
+
+
+```{r}
+trainDataPath = "./train.csv"
+testDataPath = "./test.csv"
+submissionFilePath = "./submission.csv"
+
+predictedValuesColumnName = "median_house_value"
+idColumnName = "id"
+
+```
+
+
+# 2. Loading dataset
+
+```{r}
+trainData <- read.csv(trainDataPath)
+testData <- read.csv(testDataPath)
+
+```
+
+# 2.1 Inspecting values of train data
+```{r}
+head(trainData)
+```
+
+# 2.2 Inspecting values of test data
+
+```{r}
+head(testData)
+```
+
+
+# Generating submission file
+
+```{r}
+utils.submission = function (data) {
+  submissionFrame <- data.frame(
+    "id" = data$id,
+    "median_house_value" = data$id
+  )
+  write.csv(submissionFrame, submissionFilePath, row.names = FALSE)
+}
+```
+
+```{r}
+utils.submission(testData)
+```
+
+
