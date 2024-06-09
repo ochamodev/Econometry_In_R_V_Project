@@ -5,11 +5,12 @@ output: html_notebook
 
 # 0. Environment setup
 
-```{r}
+```{r include=FALSE}
 library(dplyr)
 library(ggplot2)
 library(caret)
 library(MASS)
+library(PerformanceAnalytics)
 ```
 
 
@@ -35,15 +36,89 @@ testData <- read.csv(testDataPath)
 
 ```
 
-# 2.1 Inspecting values of train data
+## 2.1 Inspecting values of train data
 ```{r}
 head(trainData)
 ```
 
-# 2.2 Inspecting values of test data
+## 2.2 Inspecting values of test data
 
 ```{r}
 head(testData)
+```
+
+
+## 2.3 A summary of the variables
+
+```{r}
+summary(trainData)
+```
+```{r}
+summary(testData)
+```
+
+
+We have a single categorical variable ocean_proximity
+
+```{r}
+unique(trainData$ocean_proximity)
+```
+
+## 2.4 box plot of variables
+
+```{r}
+plotBoxPlots <- function(data) {
+  for (i in 1:length(data)) {
+        boxplot(data[,i], main=names(data[i]), type="l")
+  }
+}
+```
+
+
+```{r}
+numericColumnsNames <- which(sapply(trainData, is.numeric))
+numericData <- trainData[, numericColumnsNames]
+```
+
+
+```{r}
+plotBoxPlots(numericData)
+```
+## 2.5 Plotting density of variables
+
+
+```{r}
+plotDensityOfColumn <- function(data, x_axis, title, x_lab, y_lab) {
+  plottedDensity <- ggplot(data, aes(x = x_axis)) + 
+  geom_density(fill = "blue", alpha = 0.5) +
+  labs(title = title, x = x_lab, y = y_lab)
+  
+  return(plottedDensity)
+}
+```
+
+```{r}
+plotDensityOfColumn(trainData,
+                    trainData$latitude,
+                    title = "Densidad de latitude",
+                    x_lab = "Latitude",
+                    y_lab = "Densidad"
+)
+```
+
+```{r}
+plotDensityOfColumn(trainData,
+                    trainData$longitude,
+                    title = "Densidad de Longitude",
+                    x_lab = "Longitude",
+                    y_lab = "Densidad"
+)
+```
+
+
+
+```{r}
+chart.Correlation(numericData, histogram = TRUE, method = "pearson")
 ```
 
 
