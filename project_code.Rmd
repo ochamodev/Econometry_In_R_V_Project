@@ -120,6 +120,121 @@ plotDensityOfColumn(trainData,
 ```{r}
 chart.Correlation(numericData, histogram = TRUE, method = "pearson")
 ```
+# Encoding ocean_proximity
+```{r}
+install.packages("dplyr")
+```
+
+
+```{r}
+library(cleandata)
+library(dplyr)
+```
+
+```{r}
+
+#ocean_proximity
+
+#"<1H OCEAN"  "INLAND"     "NEAR BAY"   "NEAR OCEAN" "ISLAND"  
+
+trainData <- trainData %>%
+  mutate(ocean_proximity = case_when(
+    ocean_proximity == "<1H OCEAN" ~ 1,
+    ocean_proximity == "INLAND" ~ 2,
+    ocean_proximity == "NEAR BAY" ~ 3,
+    ocean_proximity == "NEAR OCEAN" ~ 4,
+    ocean_proximity == "ISLAND" ~ 5,
+    TRUE ~ NA_real_
+  ))
+
+print(trainData)
+
+```
+
+# Eliminacion de valores NA
+
+```{r}
+
+datos_limpios <- trainData %>% na.omit()
+
+datos_limpios
+
+```
+
+# Matriz de correlacion
+```{r}
+library(corrplot)
+
+cor_matrix <- cor(datos_limpios, use="complete.obs")
+corrplot(cor_matrix, method="circle")
+```
+# Regresion Lineal
+```{r}
+
+# Ajustar un modelo de regresión lineal
+modelo_lm <- lm(datos_limpios$median_house_value ~ datos_limpios$median_income + datos_limpios$latitude, data = datos_limpios)
+
+summary(modelo_lm)
+
+```
+
+```{r}
+# Realizar predicciones
+predicciones <- predict(modelo_lm, newdata = testData)
+```
+# Grafica regresion lineal
+```{r}
+# Graficar el modelo de regresión
+plot(datos_limpios$median_income, datos_limpios$median_house_value, 
+     xlab = "Median Income", ylab = "Median House Value", main = "Regression Model")
+abline(modelo_lm, col = "blue")
+
+# Añadir puntos de latitud con colores diferentes
+points(datos_limpios$median_income, datos_limpios$median_house_value, 
+       col = adjustcolor("red", alpha.f = 0.5))
+legend("topright", legend = c("Regresión", "Latitud"),
+       col = c("blue", adjustcolor("red", alpha.f = 0.5)), lty = 1:1, cex = 0.8)
+
+```
+
+
+# Regresion polynomial
+```{r}
+# Ajustar el modelo de regresión polinómica de grado 2 con múltiples variables independientes
+grado <- 2
+modelo_poly <- lm(datos_limpios$median_house_value ~ poly(datos_limpios$median_income, grado, raw=TRUE) + poly(datos_limpios$latitude, grado, raw=TRUE), data = datos_limpios)
+
+summary(modelo_poly)
+
+```
+# Grafica Polinomial
+```{r}
+install.packages("plotly")
+
+income_seq <- seq(min(datos_limpios$median_income), max(datos_limpios$median_income), length.out = 20)
+latitude_seq <- seq(min(datos_limpios$latitude), max(datos_limpios$latitude), length.out = 20)
+grid <- expand.grid(median_income = income_seq, latitude = latitude_seq)
+
+# Predecir los valores de median_house_value usando el modelo
+predicted_values <- predict(modelo_poly, newdata = grid)
+
+# Graficar la superficie polinómica
+library(plotly)  # Para gráficos interactivos, si lo prefieres
+plot_ly(x = grid$median_income, y = grid$latitude, z = matrix(predicted_values, nrow = length(income_seq)),
+        type = "surface", colorscale = "Viridis", showscale = FALSE) %>%
+  add_surface() %>%
+  layout(scene = list(xaxis = list(title = "Median Income"),
+                      yaxis = list(title = "Latitude"),
+                      zaxis = list(title = "Median House Value")))
+```
+
+
+
+# Prediccion Polinomial
+```{r}
+# Realizar predicciones
+predicciones <- predict(modelo_poly, newdata = nuevos_datos)
+```
 
 
 # Generating submission file
