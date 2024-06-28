@@ -14,18 +14,20 @@ library(PerformanceAnalytics)
 library(corrplot)
 library(cleandata)
 library(plotly)
+library(xgboost)
+library(Matrix)
 ```
 
 
 # Generating submission file
 
 ```{r}
-utils.submission = function (data) {
+utils.submission = function (data, submissionPath) {
   submissionFrame <- data.frame(
     "id" = data$id,
     "median_house_value" = data$median_house_value
   )
-  write.csv(submissionFrame, submissionFilePath, row.names = FALSE)
+  write.csv(submissionFrame, submissionPath, row.names = FALSE)
 }
 ```
 
@@ -163,6 +165,12 @@ print(trainData)
 
 ```
 
+```{r}
+copyTrainData <- data.table::copy(trainData)
+copyTestData <- data.table::copy(testData)
+```
+
+
 # Eliminacion de valores NA
 
 ```{r}
@@ -183,7 +191,7 @@ corrplot(cor_matrix, method="circle")
 
 # Ajustar un modelo de regresión lineal
 modelo_lm <- datos_limpios %>%
-  lm(formula = median_house_value ~ median_income + latitude)
+  lm(formula = median_house_value ~ median_income + latitude + total_rooms + total_bedrooms + households)
 
 summary(modelo_lm)
 
@@ -196,7 +204,7 @@ predicciones <- predict(modelo_lm, newdata = testData)
 
 ```{r}
 testData$median_house_value = predicciones
-utils.submission(testData)
+utils.submission(testData, submissionPath = "./submission_simple_regression.csv")
 ```
 
 # Grafica regresion lineal
@@ -250,8 +258,8 @@ plot_ly(x = grid$median_income, y = grid$latitude, z = matrix(predicted_values, 
 ```{r}
 # Realizar predicciones
 predicciones <- predict(modelo_poly, newdata = testData)
-length(predicciones)
 ```
+
 ```{r}
 testData$median_house_value = predicciones
 ```
@@ -259,7 +267,51 @@ testData$median_house_value = predicciones
 
 
 ```{r}
-utils.submission(testData)
+#utils.submission(predicciones, "submission_polynomial.csv")
 ```
+
+
+
+# XgBoost
+
+```{r}
+set.seed(123)
+
+trainfeatures <- datos_limpios %>% select(-median_house_value)
+trainTarget <- datos_limpios$median_house_value
+
+testFeatures <- copyTestData2
+
+trainFeaturesMatrix <- as.matrix(trainfeatures)
+testFeaturesMatrix <- as.matrix(testFeatures)
+
+dtrain <- xgb.DMatrix(data = trainFeaturesMatrix, label = trainTarget)
+
+params <- list(
+  objective = "reg:squarederror",  # for regression
+  eval_metric = "rmse"  # root mean squared error
+)
+
+```
+
+```{r}
+model <- xgb.train(
+  params = params,
+  data = dtrain,
+  nrounds = 100,  # number of boosting rounds
+  verbose = 1
+)
+```
+
+
+```{r}
+predictions <- predict(model, newdata = testFeaturesMatrix)
+
+testData$median_house_value = predictions
+
+utils.submission(testData, "xbgboost_submission.csv")
+```
+
+
 
 
