@@ -279,8 +279,7 @@ set.seed(123)
 
 trainfeatures <- datos_limpios %>% select(-median_house_value)
 trainTarget <- datos_limpios$median_house_value
-
-testFeatures <- copyTestData2
+testFeatures <- copyTestData
 
 trainFeaturesMatrix <- as.matrix(trainfeatures)
 testFeaturesMatrix <- as.matrix(testFeatures)
@@ -305,7 +304,12 @@ model <- xgb.train(
 
 
 ```{r}
+predictionsTrain <- predict(model, dtrain)
 predictions <- predict(model, newdata = testFeaturesMatrix)
+
+rmse <- sqrt(mean((trainTarget - predictionsTrain)^2))
+cat("RMSE: ", rmse, "\n")
+
 
 testData$median_house_value = predictions
 
