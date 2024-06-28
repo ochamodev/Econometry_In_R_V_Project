@@ -11,8 +11,23 @@ library(ggplot2)
 library(caret)
 library(MASS)
 library(PerformanceAnalytics)
+library(corrplot)
+library(cleandata)
+library(plotly)
 ```
 
+
+# Generating submission file
+
+```{r}
+utils.submission = function (data) {
+  submissionFrame <- data.frame(
+    "id" = data$id,
+    "median_house_value" = data$median_house_value
+  )
+  write.csv(submissionFrame, submissionFilePath, row.names = FALSE)
+}
+```
 
 # 1. Constants
 
@@ -121,15 +136,6 @@ plotDensityOfColumn(trainData,
 chart.Correlation(numericData, histogram = TRUE, method = "pearson")
 ```
 # Encoding ocean_proximity
-```{r}
-install.packages("dplyr")
-```
-
-
-```{r}
-library(cleandata)
-library(dplyr)
-```
 
 ```{r}
 
@@ -137,8 +143,10 @@ library(dplyr)
 
 #"<1H OCEAN"  "INLAND"     "NEAR BAY"   "NEAR OCEAN" "ISLAND"  
 
-trainData <- trainData %>%
-  mutate(ocean_proximity = case_when(
+
+process_ocean_proximity <- function(dataset) {
+  newDataset <- dataset %>%
+    mutate(ocean_proximity = case_when(
     ocean_proximity == "<1H OCEAN" ~ 1,
     ocean_proximity == "INLAND" ~ 2,
     ocean_proximity == "NEAR BAY" ~ 3,
@@ -146,6 +154,10 @@ trainData <- trainData %>%
     ocean_proximity == "ISLAND" ~ 5,
     TRUE ~ NA_real_
   ))
+  return(newDataset)
+}
+trainData <- process_ocean_proximity(trainData)
+testData <- process_ocean_proximity(testData)
 
 print(trainData)
 
@@ -163,8 +175,6 @@ datos_limpios
 
 # Matriz de correlacion
 ```{r}
-library(corrplot)
-
 cor_matrix <- cor(datos_limpios, use="complete.obs")
 corrplot(cor_matrix, method="circle")
 ```
@@ -181,6 +191,7 @@ summary(modelo_lm)
 ```{r}
 # Realizar predicciones
 predicciones <- predict(modelo_lm, newdata = testData)
+length(predicciones)
 ```
 # Grafica regresion lineal
 ```{r}
@@ -209,7 +220,6 @@ summary(modelo_poly)
 ```
 # Grafica Polinomial
 ```{r}
-install.packages("plotly")
 
 income_seq <- seq(min(datos_limpios$median_income), max(datos_limpios$median_income), length.out = 20)
 latitude_seq <- seq(min(datos_limpios$latitude), max(datos_limpios$latitude), length.out = 20)
@@ -219,7 +229,7 @@ grid <- expand.grid(median_income = income_seq, latitude = latitude_seq)
 predicted_values <- predict(modelo_poly, newdata = grid)
 
 # Graficar la superficie polinómica
-library(plotly)  # Para gráficos interactivos, si lo prefieres
+# Para gráficos interactivos, si lo prefieres
 plot_ly(x = grid$median_income, y = grid$latitude, z = matrix(predicted_values, nrow = length(income_seq)),
         type = "surface", colorscale = "Viridis", showscale = FALSE) %>%
   add_surface() %>%
@@ -234,20 +244,12 @@ plot_ly(x = grid$median_income, y = grid$latitude, z = matrix(predicted_values, 
 ```{r}
 # Realizar predicciones
 predicciones <- predict(modelo_poly, newdata = nuevos_datos)
+length(predicciones)
 ```
-
-
-# Generating submission file
-
 ```{r}
-utils.submission = function (data) {
-  submissionFrame <- data.frame(
-    "id" = data$id,
-    "median_house_value" = data$id
-  )
-  write.csv(submissionFrame, submissionFilePath, row.names = FALSE)
-}
 ```
+
+
 
 ```{r}
 utils.submission(testData)
