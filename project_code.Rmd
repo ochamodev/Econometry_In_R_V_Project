@@ -182,7 +182,8 @@ corrplot(cor_matrix, method="circle")
 ```{r}
 
 # Ajustar un modelo de regresión lineal
-modelo_lm <- lm(datos_limpios$median_house_value ~ datos_limpios$median_income + datos_limpios$latitude, data = datos_limpios)
+modelo_lm <- datos_limpios %>%
+  lm(formula = median_house_value ~ median_income + latitude)
 
 summary(modelo_lm)
 
@@ -191,8 +192,13 @@ summary(modelo_lm)
 ```{r}
 # Realizar predicciones
 predicciones <- predict(modelo_lm, newdata = testData)
-length(predicciones)
 ```
+
+```{r}
+testData$median_house_value = predicciones
+utils.submission(testData)
+```
+
 # Grafica regresion lineal
 ```{r}
 # Graficar el modelo de regresión
@@ -213,7 +219,7 @@ legend("topright", legend = c("Regresión", "Latitud"),
 ```{r}
 # Ajustar el modelo de regresión polinómica de grado 2 con múltiples variables independientes
 grado <- 2
-modelo_poly <- lm(datos_limpios$median_house_value ~ poly(datos_limpios$median_income, grado, raw=TRUE) + poly(datos_limpios$latitude, grado, raw=TRUE), data = datos_limpios)
+modelo_poly <- lm(median_house_value ~ poly(median_income, grado, raw=TRUE) + poly(latitude, grado, raw=TRUE), data = datos_limpios)
 
 summary(modelo_poly)
 
@@ -243,10 +249,11 @@ plot_ly(x = grid$median_income, y = grid$latitude, z = matrix(predicted_values, 
 # Prediccion Polinomial
 ```{r}
 # Realizar predicciones
-predicciones <- predict(modelo_poly, newdata = nuevos_datos)
+predicciones <- predict(modelo_poly, newdata = testData)
 length(predicciones)
 ```
 ```{r}
+testData$median_house_value = predicciones
 ```
 
 
