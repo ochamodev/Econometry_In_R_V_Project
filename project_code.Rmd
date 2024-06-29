@@ -297,7 +297,7 @@ params <- list(
 model <- xgb.train(
   params = params,
   data = dtrain,
-  nrounds = 100,  # number of boosting rounds
+  nrounds = 1000,  # number of boosting rounds
   verbose = 1
 )
 ```
