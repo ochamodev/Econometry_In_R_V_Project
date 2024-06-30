@@ -149,8 +149,8 @@ chart.Correlation(numericData, histogram = TRUE, method = "pearson")
 process_ocean_proximity <- function(dataset) {
   newDataset <- dataset %>%
     mutate(ocean_proximity = case_when(
-    ocean_proximity == "<1H OCEAN" ~ 1,
-    ocean_proximity == "INLAND" ~ 2,
+    ocean_proximity == "INLAND" ~ 1,
+    ocean_proximity == "<1H OCEAN" ~ 2,
     ocean_proximity == "NEAR BAY" ~ 3,
     ocean_proximity == "NEAR OCEAN" ~ 4,
     ocean_proximity == "ISLAND" ~ 5,
@@ -277,9 +277,9 @@ testData$median_house_value = predicciones
 ```{r}
 set.seed(123)
 
-trainfeatures <- datos_limpios %>% select(median_income,latitude,longitude, total_rooms, housing_median_age,-median_house_value)
+trainfeatures <- datos_limpios %>% select(median_income, total_rooms, housing_median_age, latitude, longitude, ocean_proximity,-median_house_value)
 trainTarget <- datos_limpios$median_house_value
-testFeatures <- copyTestData %>% select(median_income,latitude,longitude, total_rooms, housing_median_age)
+testFeatures <- copyTestData %>% select(median_income, total_rooms, housing_median_age, latitude, longitude, ocean_proximity)
 
 trainFeaturesMatrix <- as.matrix(trainfeatures)
 testFeaturesMatrix <- as.matrix(testFeatures)
